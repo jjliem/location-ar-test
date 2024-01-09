@@ -43,7 +43,7 @@
         border-right: 20px solid transparent;
         border-bottom: 50px solid black;
 	}
-    #latlong_tech {
+    #tech_rotation {
 		position:absolute;
         left:0;
 		bottom:0; 
@@ -56,27 +56,34 @@
 </head>
 
 <script>
-        AFRAME.registerComponent('rotation-reader', 
-        {
-            // Set up the tick throttling.
-            init:function(){
-                this.tick = AFRAME.utils.throttleTick(this.tick, 1000, this);
-            },
+    // get rotation of camera
+    AFRAME.registerComponent('rotation-reader', 
+    {
+        // Set up the tick throttling.
+        init:function(){
+            this.tick = AFRAME.utils.throttleTick(this.tick, 1000, this);
+        },
 
-            // Tick function that will be wrapped to be throttled.
-            tick: function (t, dt) {
-                // `this.el` is the element.
-                // `object3D` is the three.js object.
+        // Tick function that will be wrapped to be throttled.
+        tick: function (t, dt) {
+            // `this.el` is the element.
+            // `object3D` is the three.js object.
 
-                // `rotation` is a three.js Euler using radians. `quaternion` also available.
-                console.log(this.el.object3D.rotation);
+            // `rotation` is a three.js Euler using radians. `quaternion` also available.
+            let rotation = this.el.object3D.rotation;
+            // console.log(rotation);
 
-                // `position` is a three.js Vector3.
-                console.log(this.el.object3D.position);
 
-                const camera = document.getElementById("latlong_tech").innerHTML = JSON.stringify(this.el.object3D.rotation);
+            // `position` is a three.js Vector3.
+            let position = this.el.object3D.position;
+            // console.log(position);
 
-            }
+            // update rotation on screen
+            const camera = document.getElementById("tech_rotation").innerHTML = JSON.stringify(rotation);
+
+            document.getElementById("tech").style.transform = `rotate(${rotation._x}deg)`;
+
+        }
     });
 </script>
 
@@ -100,10 +107,9 @@
 
 	<div id = "map"></div>
     <div id = "tech"></div>
-    <div id = "latlong_tech">latitude:33.0582271; longitude:-96.8331665;</div>
+    <div id = "tech_rotation">rotation</div>
 
 <script>
-    const camera = document.getElementById("ar");
 
     let heading = 90;
     let lat = 33.0582271;
@@ -119,7 +125,8 @@
 	const marker = L.marker([lat, long]).addTo(map);
 
     // rotate marker (will be variable)
-    document.getElementById("tech").style.transform = `rotate(${heading}deg)`;
+    // document.getElementById("tech").style.transform = `rotate(${heading}deg)`;
+
 </script>
 
 </body>
