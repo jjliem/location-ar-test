@@ -1,34 +1,89 @@
 <!DOCTYPE html>
 <html>
+
+<!-- https://ar-js-org.github.io/AR.js-Docs/location-based-aframe/ -->
+
 <head>
-<title>AR.js A-Frame Location-based</title>
-<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-threex-location-only.js'></script>
-<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js'></script>
+	<title>AR.js A-Frame Location-based</title>
+	<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+	<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-threex-location-only.js'></script>
+	<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js'></script>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+	
+	<style>
+	html, body {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+	}
+    #ar {
+		position:absolute;
+		left:0;
+		right:0;
+		top:0;
+		height:60%;
+	}
+	#map {
+		position:absolute;
+		left:0;
+		right:0;
+		bottom:0;
+		height:40%;
+	}
+    #tech {
+		position:absolute;
+		left:49%;
+		bottom:20%;
+		/* height:30px;
+        width:30px; 
+        background-color: red; */
+        z-index: 1000;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-bottom: 50px solid black;
+	}
+</style>	
 </head>
+
 <body>
-<a-scene vr-mode-ui='enabled: false' arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: false' renderer='antialias: true; alpha: true'>
-    <a-camera gps-new-camera='gpsMinDistance: 5'></a-camera>
-    <a-entity material='color: red' geometry='primitive: box' gps-new-entity-place="latitude: 33.0582271; longitude: -96.8331665" scale="1 1 1"></a-entity>
-    <a-entity 
-        geometry="primitive: ring; radiusInner: 0.5; radiusOuter: 1" 
-        material="side: double"
-        gps-new-entity-place="latitude: 33.0582218; longitude: -96.8330133" 
-        scale="10 10 10">
-    </a-entity>
-    
-    <a-image 
-        src="marker.png"
-        gps-new-entity-place="latitude: 33.0582219; longitude: -96.8330134" 
-        scale="5 5 5"
-    ></a-image>
+    <div id="ar">
+        <a-scene vr-mode-ui='enabled: false' arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: false' renderer='antialias: true; alpha: true'>
+	    
+            <a-camera 
+                gps-new-camera='gpsMinDistance: 5'
+            ></a-camera>
+            
+            <a-entity 
+                material='color: red' 
+                geometry='primitive: box' 
+                gps-new-entity-place="latitude:33.0582271; longitude:-96.8331665;" 
+                scale="5 5 5"
+            ></a-entity>
+        </a-scene>
+    </div>
 
-    <a-text
-        scale="10 10 10"
-        value="HUB"
-        gps-new-entity-place="latitude: 33.0582220; longitude: -96.8330134" 
-    ></a-text>
 
-</a-scene>
+	<div id="map"></div>
+    <div id ="tech"></div>
+
+<script>
+    let heading = 90;
+    let lat = 33.0582271;
+    let long = -96.8331665;
+
+	const map = L.map('map').setView([lat, long], 13);
+
+	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	}).addTo(map);
+
+	const marker = L.marker([lat, long]).addTo(map);
+
+    // rotate marker (will be variable)
+    document.getElementById("tech").style.transform = `rotate(${heading}deg)`;
+</script>
+
 </body>
 </html>
