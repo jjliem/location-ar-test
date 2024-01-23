@@ -4,128 +4,382 @@
 <!-- https://ar-js-org.github.io/AR.js-Docs/location-based-aframe/ -->
 
 <head>
-	<title>AR.js A-Frame Location-based</title>
-	<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-	<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-threex-location-only.js'></script>
-	<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js'></script>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-	
-	<style>
-	html, body {
-		width: 100%;
-		height: 100%;
-		margin: 0;
-	}
-    #ar {
-		position:absolute;
-		left:0;
-		right:0;
+<title>Fac AR Rotate</title>
+<!-- AR LIBRARIES -->
+<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-threex-location-only.js'></script>
+<script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js'></script>
+
+<!-- LEAFLET -->
+<!--
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+-->
+<script src="https://unpkg.com/leaflet@1.9/dist/leaflet-src.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9/dist/leaflet.css">
+
+<!-- LEAFLET-ROTATE -->
+<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
+
+
+<style>
+html, body {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+#ar {
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:50%;
+}
+#map {
+	position:absolute;
+	bottom:0;
+	width:100%;
+	height:50%;
+	border-top:2px solid white;
+}
+#tech {
+	position:absolute;
+	left:49%;
+	bottom:22%;
+	z-index: 1000;
+	border-left: 20px solid transparent;
+	border-right: 20px solid transparent;
+	border-bottom: 60px solid steelblue;
+	opacity:0.5;
+/* 	transform-origin: -10px 30px; */
+}
+#HEADING,
+#DISTANCE {
+	position:absolute;
+	left:45%;
+	bottom:10px;
+	height:20px;
+	width:50px;
+	padding:2px 0;
+	color:black;
+	background:white;
+	border:1px solid grey;
+	text-align:center;
+	font-family: ariel;
+	z-index: 1001;
+}
+#DISTANCE {
+	left:10%;
+	width:100px;
+}
+
+@media all and (orientation:landscape) {
+	#ar {
 		top:0;
-		height:60%;
+		bottom:0;
+		right:0;
+		width:50%;
+		height:100%;
 	}
 	#map {
-		position:absolute;
-		left:0;
-		right:0;
+		top:0;
 		bottom:0;
-		height:40%;
+		left:0;
+		width:50%;
+		height:100%;
+		border-top:none;
+		border-right:2px solid white;
 	}
-    #tech {
-		position:absolute;
-		left:49%;
-		bottom:20%;
-		/* height:30px;
-        width:30px; 
-        background-color: red; */
-        z-index: 1000;
-        border-left: 20px solid transparent;
-        border-right: 20px solid transparent;
-        border-bottom: 50px solid black;
+	#tech {
+		bottom:48%;
+		right:auto;
+		left:25%;
 	}
-    #tech_rotation {
-		position:absolute;
-        left:0;
-		bottom:0; 
-        background-color: black;
-        color: white;
-        z-index: 1000;
-        font-size: 15px;
+	#HEADING {
+		left:22%;
 	}
-</style>	
+	#DISTANCE {
+		left:5%;
+	}
+	
+}
+</style>
 </head>
 
 <script>
-    // get rotation of camera
-    AFRAME.registerComponent('rotation-reader', 
-    {
-        // Set up the tick throttling.
-        init:function(){
-            this.tick = AFRAME.utils.throttleTick(this.tick, 1000, this);
-        },
+let judith = [33.0582271, -96.8331665, 0];
+let kevin = [41.116339, -74.246796, -10];
 
-        // Tick function that will be wrapped to be throttled.
-        tick: function (t, dt) {
-            // `this.el` is the element.
-            // `object3D` is the three.js object.
+let place = judith;
 
-            // `rotation` is a three.js Euler using radians. `quaternion` also available.
-            let rotation = this.el.object3D.rotation;
-            // console.log(rotation);
+let markerLat = place[0];
+let markerLng = place[1];
+let variation = place[2];
 
+let multipleDemoMarkers = false;
 
-            // `position` is a three.js Vector3.
-            let position = this.el.object3D.position;
-            // console.log(position);
-
-            // update rotation on screen
-            const camera = document.getElementById("tech_rotation").innerHTML = JSON.stringify(rotation);
-
-            document.getElementById("tech").style.transform = `rotate(${rotation._x}deg)`;
-
-        }
-    });
 </script>
 
-<body>
+<body onload="init()" onbeforeunload="stop()">
     <div id="ar">
         <a-scene vr-mode-ui='enabled: false' arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: false' renderer='antialias: true; alpha: true'>
 	    
             <a-camera 
-                gps-new-camera='gpsMinDistance: 5' rotation-reader
+                gps-new-camera='gpsMinDistance: 5'
             ></a-camera>
-            
-            <a-entity 
-                material='color: red' 
-                geometry='primitive: box' 
-                gps-new-entity-place="latitude:33.0582271; longitude:-96.8331665;" 
-                scale="5 5 5"
-            ></a-entity>
+
+			<!-- at location -->
+			<!-- <a-torus 
+				color="#00b9f2" arc="360" radius="5" radius-tubular="0.25" rotation="90 0 0" position="0 -10 0"
+				gps-new-entity-place="latitude:33.0582271; longitude:-96.8331665;"
+				scale="0.5 0.5 0.5" 
+			></a-torus> -->
+
         </a-scene>
     </div>
 
-
-	<div id = "map"></div>
-    <div id = "tech"></div>
-    <div id = "tech_rotation">rotation</div>
+	<div id="map"></div>
+    <div id="HEADING"></div>
+    <div id="DISTANCE"></div>
+    <div id="tech"/>
 
 <script>
 
-    let heading = 90;
-    let lat = 33.0582271;
-    let long = -96.8331665;
+let theMap = null;
+let sensor = null;
+let heading = 90;
 
-	const map = L.map('map').setView([lat, long], 13);
+//init application
+const init = () => {
+	initMap();
+	initLocation();
+	initCompass();
+}
 
+// leave application
+const stop = () => {
+	if (sensor)
+		sensor.stop();
+}
+
+// create the map with tech marker
+// need to also take the pin location and init the AR with it!
+const initMap = () => {
+
+	theMap = L.map('map', {
+		center: [markerLat, markerLng],
+		zoom: 17,
+//		layers: [esri],
+		rotate: true,
+/*		
+		rotateControl: {
+			closeOnZeroBearing: false,
+			// position: 'bottomleft',
+		},
+*/		
+		// bearing: 30,
+		// attributionControl: false,
+		// zoomControl: false,
+		// compassBearing: false,
+		// trackContainerMutation: false,
+		// shiftKeyRotate: false,
+		// touchGestures: true,
+		touchRotate: true,
+		// touchZoom: true
+	});
+	
+	theMap.compassBearing.disable();
+	
 	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
 		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-	}).addTo(map);
+	}).addTo(theMap);
+	
+	// const marker = L.marker([markerLat, markerLng]).addTo(theMap);
 
-	const marker = L.marker([lat, long]).addTo(map);
+	setupLeafletDemoMarkers(markerLat, markerLng);
+	setupArDemoMarkers(markerLat, markerLng);
+}
 
-    // rotate marker (will be variable)
-    // document.getElementById("tech").style.transform = `rotate(${heading}deg)`;
+// begin location watch
+const initLocation = () => {
+	navigator.geolocation.getCurrentPosition(updateLocation, updateError);
+	// begin watching our location
+	navigator.geolocation.watchPosition(updateLocation);	
+}
+
+//handle location update
+const updateLocation = (position) => {
+	let lat = position.coords.latitude;
+	let lng = position.coords.longitude;
+	changeLocation(lat, lng);
+}
+
+// update error
+const updateError = (e) => {
+	console.log("UpdateError: " + e.message);
+}
+
+// move the map to center on us
+// should also zoom out if marker not visible?
+const changeLocation = (lat, lng) => {
+	if (theMap != null)
+		theMap.setView([lat,lng]);
+	
+	let distance = findDistance([lat,lng], [markerLat, markerLng]);
+	document.getElementById("DISTANCE").innerHTML = distance;
+}
+
+//quickie close distance calc
+const findDistance = (coords1, coords2) => 
+{
+	let d = theMap.distance(coords1, coords2);	// meters
+	
+	d = d / 0.3048;
+	
+    if (d == 0)
+    {
+        return "0";
+    }
+    else
+    if (d < 100) 
+    {
+        return d.toFixed(1) + ' ft';
+    } 
+    else 
+    {
+        return Math.round(d).toLocaleString("en-US") + ' ft';
+    }
+	
+/*
+	const lonDiffSquared = Math.pow((coords1[0] - coords2[0]), 2);
+    const latDiffSquared = Math.pow((coords1[1] - coords2[1]), 2);
+    return Math.sqrt(latDiffSquared + lonDiffSquared).toFixed(6);
+*/
+}
+
+// begin compass 
+const initCompass = () => {
+	sensor = new AbsoluteOrientationSensor({ frequency:10, referenceFrame:'screen' });
+	sensor.addEventListener("reading", changeHeading);
+	sensor.start();
+}
+
+// rotate the user arrow
+// sensor.quaternion is array [x,y,z,w]
+const changeHeading = () => {
+	let q = sensor.quaternion;
+	let rawHeading = Math.atan2( 2*q[0]*q[1] + 2*q[2]*q[3], 1 - 2*q[1]*q[1] - 2*q[2]*q[2] );
+	rawHeading = rawHeading * (180/Math.PI); // convert from radians to degrees.
+	rawHeading -= variation;
+
+	// rotate the arrow
+	let rotate = -rawHeading
+//    document.getElementById("tech").style.transform = `rotate(${rotate}deg)`;
+
+	// print the heading
+	heading = rawHeading >= 0 ? 360- rawHeading : Math.abs(rawHeading);
+	heading = heading.toFixed(0);
+	if (heading == "360") heading = 0;
+    document.getElementById("HEADING").innerHTML = heading + "&deg";
+
+	// rotate the map instead
+	theMap.setBearing(rawHeading);
+}
+
+// function initDemoMarkers(markerLat, markerLng)
+// {
+// 	setupArDemoMarkers(markerLat, markerLng);
+// 	setupLeafletDemoMarkers(markerLat, markerLng);
+// }
+
+
+// set up nearby demo AR markers
+function setupLeafletDemoMarkers(latitude, longitude) 
+{
+	const markerWest = L.marker([markerLat - 0.001, markerLng]).addTo(theMap); // slightly west
+	markerWest.bindTooltip("West").openTooltip();
+
+	if (multipleDemoMarkers)
+	{
+		const markerNorth = L.marker([markerLat, markerLng + 0.001]).addTo(theMap); // slightly north
+		const markerSouth = L.marker([markerLat, markerLng - 0.001]).addTo(theMap); // slightly south
+		const markerEast = L.marker([markerLat + 0.001, markerLng]).addTo(theMap); // slightly east
+		markerNorth.bindTooltip("North").openTooltip();
+		markerSouth.bindTooltip("South").openTooltip();
+		markerEast.bindTooltip("East").openTooltip();
+	}
+}
+
+function setupArDemoMarkers(latitude, longitude) 
+{
+	const scene = document.querySelector("a-scene");
+	let north = document.createElement("a-torus");
+	let south = document.createElement("a-torus");
+	let east = document.createElement("a-torus");
+	let west = document.createElement("a-torus");
+
+	setAttributes(north, {
+		"color": "#ff2e17",
+		"arc": "360",
+		"radius": "5",
+		"radius-tubular": "0.25",
+		"rotation": "90 0 0",
+		"gps-new-entity-place": `latitude:${latitude}; longitude:${longitude + 0.001};`,
+		"scale": "2 2 2",
+		"position": "0 -20 0"
+	});
+
+	setAttributes(south, {
+		"color": "#FFFFFF",
+		"arc": "360",
+		"radius": "5",
+		"radius-tubular": "0.25",
+		"rotation": "90 0 0",
+		"gps-new-entity-place": `latitude:${latitude}; longitude:${longitude - 0.001};`,
+		"scale": "2 2 2",
+		"position": "0 -20 0"
+	});
+
+	setAttributes(east, {
+		"color": "#ffbb31",
+		"arc": "360",
+		"radius": "5",
+		"radius-tubular": "0.25",
+		"rotation": "90 0 0",
+		"gps-new-entity-place": `latitude:${latitude + 0.001}; longitude:${longitude};`,
+		"scale": "2 2 2",
+		"position": "0 -20 0"
+	});
+
+	setAttributes(west, {
+		"color": "#a5d044",
+		"arc": "360",
+		"radius": "5",
+		"radius-tubular": "0.25",
+		"rotation": "90 0 0",
+		"gps-new-entity-place": `latitude:${latitude - 0.001}; longitude:${longitude};`,
+		"scale": "2 2 2",
+		"position": "0 -20 0"
+	});
+
+	scene.appendChild(west);
+
+	if (multipleDemoMarkers)
+	{
+		scene.appendChild(north);
+		scene.appendChild(south);
+		scene.appendChild(east);
+	}
+
+}
+
+function setAttributes(el, attrs) 
+{
+	for(var key in attrs) {
+		el.setAttribute(key, attrs[key]);
+	}
+}
 
 </script>
 
